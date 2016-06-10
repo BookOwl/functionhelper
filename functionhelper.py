@@ -5,9 +5,9 @@ Functional programming helpers
 """
 # TODO:
 # Add docs
-# Add a function composition function using >>
 
-import inspect, functools
+import inspect
+from functools import reduce
 
 def curry(f):
     """A function decorator that automaticly curries a function.
@@ -66,6 +66,8 @@ class Pipeline:
     
     def then(self, func):
         "Arranges for func to be called next in the pipeline"
+        if not callable(func):
+            raise TypeError("func must be callable")
         self._funcs.append(func)
         self.hasrun = False
         return self
@@ -114,3 +116,31 @@ class dispatch:
                     return overload(*args, **kwargs)
         return self._base(*args, **kwargs)
 
+def compose(*funcs):
+    """Takes one or more functions and returns a new function that calls each function on the data
+    compose(f, g)(x) is the same as f(g(x))"""
+    if not funcs:
+        raise TypeError("compose() takes one or more arguments (0 given)")
+    if not all(callable(f) for f in funcs):
+        raise TypeError("compose takes one or more callables")
+    def call(val):
+        return reduce((lambda data, func: func(data)), reversed(funcs), val)
+    return call
+
+def cascade(func, times):
+    "Returns a function that calls f(f(... f(x))) times times."
+    if not callable(func):
+        raise TypeError("func is not a callable")
+    return compose(*([func] * times))
+
+def foreach(iterable, func):
+    "Calls func on each item of iterable"
+    if not callable(func):
+        raise TypeError(repr(func) + " is not callable")
+    for thing in iterable:
+        func(thing)
+
+def id_(thing):
+    "Returns a function that always returns thing"
+    return lambda: thing
+    
