@@ -95,3 +95,15 @@ def test_dispatch():
     assert print_thing(1) == "This is a very mathmatical thing"
     assert print_thing(1.0) == "This is a very mathmatical thing"
     assert print_thing([]) == "An unknown thing"
+
+def test_tail_call():
+    import sys
+    sys.setrecursionlimit(90) 
+    @fh.tail_call
+    def fact(n, acc = 1):
+        if n == 1:
+            return acc
+        else:
+            return fact(n - 1, acc * n)
+    assert fact(5) == 120
+    assert fact(100) == 93326215443944152681699238856266700490715968264381621468592963895217599993229915608941463976156518286253697920827223758251185210916864000000000000000000000000
